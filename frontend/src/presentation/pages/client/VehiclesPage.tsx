@@ -31,12 +31,11 @@ export const VehiclesPage: React.FC = () => {
     fetchVehicles();
   }, []);
 
-  const handleCreateVehicle = async (data: Omit<Vehicle, 'statusText'>) => {
+  const handleCreateVehicle = async (data: Partial<Vehicle>) => {
     try {
       const newVehicle = await addClientVehicleUseCase({
         ...data,
         clientId: MOCK_CLIENT_ID,
-        statusText: 'Vehículo recién registrado',
       });
       setVehicles([...vehicles, newVehicle]);
       setShowForm(false);

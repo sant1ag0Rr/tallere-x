@@ -6,12 +6,15 @@ import { toast } from "sonner";
 import type { Vehicle } from "@/domain/models";
 import type { VehicleStatus } from "@/domain/constants/vehicle-status";
 import { vehicleRepository } from "@/infrastructure/repositories/vehicle-repository-impl";
+import { userRepository } from "@/infrastructure/repositories/user-repository-impl";
 import { AdminTable } from "@/presentation/components/shared/admin-table";
 import { StatePill } from "@/presentation/components/shared/state-pill";
 import { AdminVehicleForm } from "@/presentation/components/admin/AdminVehicleForm";
+import type { User } from "@/domain/models";
 
 export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [clients, setClients] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<VehicleStatus | "all">("all");
@@ -21,8 +24,12 @@ export default function VehiclesPage() {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const data = await vehicleRepository.listVehicles();
+        const [data, clientData] = await Promise.all([
+          vehicleRepository.listVehicles(),
+          userRepository.getUsersByRole("client")
+        ]);
         setVehicles(data);
+        setClients(clientData);
         toast.success("Flota de vehículos cargada");
       } catch {
         toast.error("Error al cargar vehículos");
@@ -81,6 +88,7 @@ export default function VehiclesPage() {
 
       {showForm && (
         <AdminVehicleForm 
+          clients={clients}
           onSubmit={async (newVehicle) => {
             const created = await vehicleRepository.createVehicle(newVehicle);
             setVehicles([created, ...vehicles]);

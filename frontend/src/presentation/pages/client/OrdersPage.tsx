@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
+import Image from 'next/image';
 import type { WorkOrder } from '@/domain/models';
 import { getClientOrdersUseCase } from '@/application/useCases/getClientOrders';
 import { OrderStatusTracker } from '@/presentation/components/client/OrderStatusTracker';
@@ -82,11 +83,11 @@ export const OrdersPage: React.FC = () => {
                   </h4>
                   <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg text-sm text-gray-700 dark:text-gray-300">
                     {order.repairs && <p className="mb-2"><span className="font-semibold">Trabajo:</span> {order.repairs}</p>}
-                    {order.usedParts.length > 0 ? (
+                    {(order.usedParts || []).length > 0 ? (
                       <div>
                         <span className="font-semibold">Repuestos:</span>
                         <ul className="list-disc pl-5 mt-1">
-                          {order.usedParts.map((p, i) => <li key={i}>{p.quantity}x {p.item.name}</li>)}
+                          {(order.usedParts || []).map((p, i) => <li key={i}>{p.quantity}x {p.item.name}</li>)}
                         </ul>
                       </div>
                     ) : (
@@ -103,7 +104,9 @@ export const OrdersPage: React.FC = () => {
                   </h4>
                   <div className="flex gap-4 overflow-x-auto pb-2">
                     {order.images.map((img, i) => (
-                      <img key={i} src={img} alt="Evidencia" className="w-24 h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-700" />
+                      <div key={i} className="relative h-24 w-24 flex-none overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+                        <Image src={img} alt="Evidencia" fill sizes="96px" className="object-cover" unoptimized />
+                      </div>
                     ))}
                   </div>
                 </div>

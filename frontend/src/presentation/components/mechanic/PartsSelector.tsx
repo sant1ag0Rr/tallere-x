@@ -31,7 +31,7 @@ export const PartsSelector: React.FC<PartsSelectorProps> = ({ onAddPart }) => {
   const handleAdd = () => {
     const item = inventory.find(i => i.id === selectedItemId);
     if (item && quantity > 0) {
-      if (quantity > item.stock) {
+      if (quantity > (item.stock || 0)) {
         alert('No hay suficiente stock');
         return;
       }
@@ -57,7 +57,7 @@ export const PartsSelector: React.FC<PartsSelectorProps> = ({ onAddPart }) => {
           >
             {inventory.map(item => (
               <option key={item.id} value={item.id}>
-                {item.name} ({item.stock} disp.)
+                {item.name} ({item.stock || 0} disp.)
               </option>
             ))}
           </select>

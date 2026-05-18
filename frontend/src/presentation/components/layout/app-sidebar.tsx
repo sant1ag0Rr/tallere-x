@@ -23,7 +23,8 @@ interface AppSidebarProps {
 const ROLE_LABEL: Record<UserRole, string> = {
   admin: "Administrador",
   client: "Cliente",
-  seller: "Vendedor"
+  seller: "Vendedor",
+  mechanic: "Mecánico"
 };
 
 export function AppSidebar({ title, role, items }: AppSidebarProps) {

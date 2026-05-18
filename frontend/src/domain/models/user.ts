@@ -16,3 +16,10 @@ export interface User {
   updatedAt: string;
   profile: UserProfile;
 }
+
+export interface Client extends User {
+  name?: string;
+  address?: string;
+  phone?: string;
+  joinDate: string;
+}

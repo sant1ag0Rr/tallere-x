@@ -1,10 +1,13 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import type { User } from '@/domain/models';
+import type { Client } from '@/domain/models';
 import { getClientProfileUseCase } from '@/application/useCases/getClientProfile';
+import { updateClientProfileUseCase } from '@/application/useCases/updateClientProfile';
 import { Loader } from '@/presentation/components/shared/Loader';
 import { User, Mail, Phone, MapPin, Save } from 'lucide-react';
+
+const MOCK_CLIENT_ID = 'client-1';
 
 export const ProfilePage: React.FC = () => {
   const [profile, setProfile] = useState<Client | null>(null);
@@ -15,9 +18,11 @@ export const ProfilePage: React.FC = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const data = await getClientProfileUseCase();
-        setProfile(data);
-        setFormData(data);
+        const data = await getClientProfileUseCase(MOCK_CLIENT_ID);
+        if (data) {
+          setProfile(data as Client);
+          setFormData(data as Client);
+        }
       } catch (err) {
         console.error(err);
       } finally {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { Suspense, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ShieldCheck, Target, Eye, Award, CheckCircle2 } from "lucide-react";
 import { USER_ROLES, type UserRole } from "@/domain/constants";
@@ -13,7 +13,7 @@ const HOME_BY_ROLE: Record<UserRole, string> = {
   seller: "/seller"
 };
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
@@ -150,5 +150,19 @@ export default function LoginPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-900">
+          <div className="h-10 w-40 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+        </main>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

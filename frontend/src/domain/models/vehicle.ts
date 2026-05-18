@@ -16,6 +16,7 @@ export interface Vehicle {
   year: number;
   mileage: number;
   status: VehicleStatus;
+  clientId?: string;
   assignedClientId?: string;
   maintenanceHistory: VehicleMaintenanceRecord[];
   createdAt: string;

@@ -1,132 +1,97 @@
 import type { WorkOrder } from "@/domain/models";
-import { delay } from "@/infrastructure/utils/delay";
+import { httpClient } from "../http/httpClient";
 
-const NOW = new Date();
+type ApiWorkOrder = WorkOrder & {
+  vehicles?: WorkOrder["vehicle"] & {
+    profiles?: {
+      firstName?: string;
+      lastName?: string;
+      email?: string;
+    } | null;
+  };
+  workOrderParts?: Array<{
+    quantity: number;
+    inventoryItems?: any;
+  }>;
+};
 
-const MOCK_WORK_ORDERS: WorkOrder[] = [
-  {
-    id: "wo-001",
-    vehicleId: "veh-001",
-    title: "Cambio de aceite",
-    description: "Cambio de aceite 5W-30 y filtro de aceite",
-    status: "completed",
-    priority: "medium",
-    estimatedCost: 85000,
-    actualCost: 82500,
-    createdAt: new Date(NOW.getTime() - 1000 * 60 * 60 * 24 * 5).toISOString(),
-    updatedAt: new Date(NOW.getTime() - 1000 * 60 * 60 * 24 * 4).toISOString(),
-    completedAt: new Date(NOW.getTime() - 1000 * 60 * 60 * 24 * 4).toISOString()
-  },
-  {
-    id: "wo-002",
-    vehicleId: "veh-002",
-    title: "Revisión de frenos",
-    description: "Revisión completa del sistema de frenos y pastillas",
-    status: "in_progress",
-    priority: "high",
-    estimatedCost: 150000,
-    createdAt: new Date(NOW.getTime() - 1000 * 60 * 60 * 24 * 2).toISOString(),
-    updatedAt: NOW.toISOString()
-  },
-  {
-    id: "wo-003",
-    vehicleId: "veh-003",
-    title: "Revisión de suspensión",
-    description: "Inspección general de la suspensión y amortiguadores",
-    status: "pending",
-    priority: "medium",
-    estimatedCost: 200000,
-    createdAt: new Date(NOW.getTime() - 1000 * 60 * 60 * 24).toISOString(),
-    updatedAt: new Date(NOW.getTime() - 1000 * 60 * 60 * 24).toISOString()
-  },
-  {
-    id: "wo-004",
-    vehicleId: "veh-004",
-    title: "Alineación de ruedas",
-    description: "Alineación de las cuatro ruedas",
-    status: "completed",
-    priority: "low",
-    estimatedCost: 120000,
-    actualCost: 120000,
-    createdAt: new Date(NOW.getTime() - 1000 * 60 * 60 * 24 * 7).toISOString(),
-    updatedAt: new Date(NOW.getTime() - 1000 * 60 * 60 * 24 * 3).toISOString(),
-    completedAt: new Date(NOW.getTime() - 1000 * 60 * 60 * 24 * 3).toISOString()
-  },
-  {
-    id: "wo-005",
-    vehicleId: "veh-001",
-    title: "Cambio de pastillas de freno",
-    description: "Cambio de pastillas delanteras",
-    status: "pending",
-    priority: "high",
-    estimatedCost: 95000,
-    createdAt: NOW.toISOString(),
-    updatedAt: NOW.toISOString()
-  }
-];
+const normalizeWorkOrder = (order: ApiWorkOrder): WorkOrder => {
+  const vehicle = order.vehicle ?? order.vehicles ?? {
+    id: order.vehicleId,
+    plate: "Sin placa",
+    brand: "Vehiculo",
+    model: "sin datos",
+    year: new Date().getFullYear(),
+    mileage: 0,
+    status: "available",
+    maintenanceHistory: [],
+    createdAt: order.createdAt,
+    updatedAt: order.updatedAt
+  };
+
+  const profile = order.vehicles?.profiles;
+  const clientName = order.clientName
+    || [profile?.firstName, profile?.lastName].filter(Boolean).join(" ")
+    || profile?.email
+    || "Cliente sin asignar";
+
+  return {
+    ...order,
+    vehicle,
+    clientName,
+    title: order.title ?? "Orden de trabajo",
+    description: order.description ?? "",
+    reportedProblem: order.reportedProblem ?? order.description ?? "Sin problema reportado",
+    priority: order.priority ?? "medium",
+    estimatedCost: Number(order.estimatedCost ?? 0),
+    actualCost: order.actualCost == null ? undefined : Number(order.actualCost),
+    workedMinutes: order.workedMinutes ?? 0,
+    usedParts: order.usedParts ?? order.workOrderParts?.map((part) => ({
+      item: part.inventoryItems,
+      quantity: part.quantity
+    })).filter((part) => Boolean(part.item)) ?? []
+  };
+};
 
 export const workOrderRepository = {
   async listWorkOrders(status?: WorkOrder["status"]): Promise<WorkOrder[]> {
-    await delay(800);
+    const workOrders = (await httpClient.get<ApiWorkOrder[]>('/work-orders')).map(normalizeWorkOrder);
     if (!status) {
-      return [...MOCK_WORK_ORDERS];
+      return workOrders;
     }
-    return MOCK_WORK_ORDERS.filter((wo) => wo.status === status);
+    return workOrders.filter((wo) => wo.status === status);
   },
 
   async getWorkOrdersByVehicleId(vehicleId: string): Promise<WorkOrder[]> {
-    await delay(800);
-    return MOCK_WORK_ORDERS.filter((wo) => wo.vehicleId === vehicleId);
+    const workOrders = (await httpClient.get<ApiWorkOrder[]>('/work-orders')).map(normalizeWorkOrder);
+    return workOrders.filter((wo) => wo.vehicleId === vehicleId);
   },
 
   async getWorkOrdersStats() {
-    await delay(800);
+    const workOrders = (await httpClient.get<ApiWorkOrder[]>('/work-orders')).map(normalizeWorkOrder);
     return {
-      total: MOCK_WORK_ORDERS.length,
-      pending: MOCK_WORK_ORDERS.filter((wo) => wo.status === "pending").length,
-      inProgress: MOCK_WORK_ORDERS.filter((wo) => wo.status === "in_progress").length,
-      completed: MOCK_WORK_ORDERS.filter((wo) => wo.status === "completed").length,
-      totalRevenue: MOCK_WORK_ORDERS.filter((wo) => wo.actualCost)
+      total: workOrders.length,
+      pending: workOrders.filter((wo) => wo.status === "pending").length,
+      inProgress: workOrders.filter((wo) => wo.status === "in_progress").length,
+      completed: workOrders.filter((wo) => wo.status === "completed").length,
+      totalRevenue: workOrders.filter((wo) => wo.actualCost)
         .reduce((sum, wo) => sum + (wo.actualCost ?? 0), 0)
     };
   },
 
   async createWorkOrder(data: Partial<WorkOrder>): Promise<WorkOrder> {
-    await delay(500);
-    const newOrder: WorkOrder = {
-      id: `wo-${Math.random().toString(36).substr(2, 9)}`,
-      vehicleId: data.vehicleId || "",
-      title: data.title || "",
-      description: data.description || "",
-      status: data.status || "pending",
-      priority: data.priority || "medium",
-      estimatedCost: data.estimatedCost || 0,
-      actualCost: data.actualCost,
-      reportedProblem: data.reportedProblem,
-      diagnosis: data.diagnosis,
-      repairs: data.repairs,
-      usedParts: data.usedParts || [],
-      workedMinutes: data.workedMinutes || 0,
-      images: data.images || [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    MOCK_WORK_ORDERS.unshift(newOrder);
-    return newOrder;
+    return normalizeWorkOrder(await httpClient.post<ApiWorkOrder>('/work-orders', data));
   },
 
   async getWorkOrderById(id: string): Promise<WorkOrder | undefined> {
-    await delay(500);
-    return MOCK_WORK_ORDERS.find(wo => wo.id === id);
+    try {
+      return normalizeWorkOrder(await httpClient.get<ApiWorkOrder>(`/work-orders/${id}`));
+    } catch (e) {
+      return undefined;
+    }
   },
 
   async updateWorkOrder(data: WorkOrder): Promise<WorkOrder> {
-    await delay(500);
-    const index = MOCK_WORK_ORDERS.findIndex(wo => wo.id === data.id);
-    if (index !== -1) {
-      MOCK_WORK_ORDERS[index] = { ...data, updatedAt: new Date().toISOString() };
-      return MOCK_WORK_ORDERS[index];
-    }
-    throw new Error("Work order not found");
+    return normalizeWorkOrder(await httpClient.put<ApiWorkOrder>(`/work-orders/${data.id}`, data));
   }
 };

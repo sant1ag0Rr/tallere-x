@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import type { WorkOrder, UsedPart } from '@/domain/models';
+import Image from 'next/image';
+import type { WorkOrder, UsedPart, WorkOrderStatus } from '@/domain/models';
 import { PartsSelector } from './PartsSelector';
 import { TimeTracker } from './TimeTracker';
 import { ImageUploader } from './ImageUploader';
@@ -25,7 +26,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onUpdateOrder, 
   };
 
   const handleAddImage = async (url: string) => {
-    await onUpdateOrder({ images: [...order.images, url] });
+    await onUpdateOrder({ images: [...(order.images || []), url] });
   };
 
   const formatTime = (minutes: number) => {
@@ -147,9 +148,9 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onUpdateOrder, 
               Evidencia Fotográfica
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
-              {order.images.map((img, idx) => (
+              {(order.images || []).map((img, idx) => (
                 <div key={idx} className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 group">
-                  <img src={img} alt={`Evidencia ${idx + 1}`} className="object-cover w-full h-full" />
+                  <Image src={img} alt={`Evidencia ${idx + 1}`} fill sizes="160px" className="object-cover" unoptimized />
                 </div>
               ))}
             </div>
@@ -167,7 +168,7 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onUpdateOrder, 
                 Tiempo
               </div>
               <span className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-500 text-xs font-bold px-2.5 py-1 rounded-full">
-                {formatTime(order.workedMinutes)}
+                {formatTime(order.workedMinutes || 0)}
               </span>
             </h2>
             <TimeTracker onAddTime={onAddWorkedTime} />
@@ -180,9 +181,9 @@ export const OrderDetail: React.FC<OrderDetailProps> = ({ order, onUpdateOrder, 
               Repuestos Usados
             </h2>
             
-            {order.usedParts.length > 0 ? (
+            {(order.usedParts || []).length > 0 ? (
               <ul className="divide-y divide-gray-200 dark:divide-gray-800 mb-6">
-                {order.usedParts.map((part, idx) => (
+                {(order.usedParts || []).map((part, idx) => (
                   <li key={idx} className="py-3 flex justify-between items-center">
                     <div className="flex items-center">
                       <div className="w-8 h-8 bg-gray-100 dark:bg-gray-800 rounded flex items-center justify-center mr-3">

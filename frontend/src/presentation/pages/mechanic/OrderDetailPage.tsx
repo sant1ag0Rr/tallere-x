@@ -55,7 +55,7 @@ export const OrderDetailPage: React.FC<OrderDetailPageProps> = ({ orderId }) => 
   const handleAddPart = async (part: UsedPart) => {
     if (!order) return;
     try {
-      const updatedOrder = await addUsedPartsUseCase(order.id, part);
+      const updatedOrder = await addUsedPartsUseCase(order.id, [part]);
       setOrder(updatedOrder);
     } catch (err: any) {
       console.error('Error adding part:', err);

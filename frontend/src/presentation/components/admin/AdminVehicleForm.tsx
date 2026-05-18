@@ -2,14 +2,15 @@
 
 import React, { useState } from "react";
 import { Car, Check } from "lucide-react";
-import type { Vehicle } from "@/domain/models";
+import type { User, Vehicle } from "@/domain/models";
 
 interface AdminVehicleFormProps {
+  clients: User[];
   onSubmit: (data: Partial<Vehicle>) => Promise<void>;
   onCancel: () => void;
 }
 
-export function AdminVehicleForm({ onSubmit, onCancel }: AdminVehicleFormProps) {
+export function AdminVehicleForm({ clients, onSubmit, onCancel }: AdminVehicleFormProps) {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     plate: "",
@@ -112,14 +113,19 @@ export function AdminVehicleForm({ onSubmit, onCancel }: AdminVehicleFormProps) 
             </select>
           </div>
           <div className="lg:col-span-2">
-            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">ID del Cliente Asignado</label>
-            <input
-              required
-              type="text"
+            <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">Cliente Asignado</label>
+            <select
               className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-colors focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
               value={formData.assignedClientId}
               onChange={(e) => setFormData({ ...formData, assignedClientId: e.target.value })}
-            />
+            >
+              <option value="">Sin cliente asignado</option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {[client.profile?.firstName, client.profile?.lastName].filter(Boolean).join(" ") || client.email}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 

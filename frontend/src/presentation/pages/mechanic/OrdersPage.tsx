@@ -17,7 +17,7 @@ export const OrdersPage: React.FC = () => {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        const data = await getAssignedOrdersUseCase();
+        const data = await getAssignedOrdersUseCase('mechanic-1');
         setOrders(data);
       } catch (err) {
         setError('No se pudieron cargar las órdenes. Inténtalo de nuevo.');

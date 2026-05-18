@@ -22,7 +22,7 @@ export const AppointmentsPage: React.FC = () => {
     const fetchData = async () => {
       try {
         const [appts, vehs] = await Promise.all([
-          getAppointmentsUseCase(MOCK_CLIENT_ID),
+          getClientAppointmentsUseCase(MOCK_CLIENT_ID),
           getClientVehiclesUseCase(MOCK_CLIENT_ID)
         ]);
         setAppointments(appts);

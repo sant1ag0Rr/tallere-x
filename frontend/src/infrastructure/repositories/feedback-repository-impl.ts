@@ -1,22 +1,18 @@
 import type { Feedback } from "@/domain/models";
-import { delay } from "@/infrastructure/utils/delay";
-
-const MOCK_FEEDBACKS: Feedback[] = [];
+import { httpClient } from "../http/httpClient";
 
 export const feedbackRepository = {
   async submitFeedback(data: Omit<Feedback, "id" | "createdAt">): Promise<Feedback> {
-    await delay(500);
-    const newFeedback: Feedback = {
-      id: `fb-${Math.random().toString(36).substr(2, 9)}`,
-      ...data,
-      createdAt: new Date().toISOString()
-    };
-    MOCK_FEEDBACKS.push(newFeedback);
-    return newFeedback;
+    return httpClient.post<Feedback>('/feedback', data);
   },
 
   async getFeedbackByWorkOrderId(workOrderId: string): Promise<Feedback | undefined> {
-    await delay(500);
-    return MOCK_FEEDBACKS.find(fb => fb.workOrderId === workOrderId);
+    try {
+      // Assuming you might implement this endpoint or filter via query param
+      const feedbacks = await httpClient.get<Feedback[]>(`/feedback?workOrderId=${workOrderId}`);
+      return feedbacks.length > 0 ? feedbacks[0] : undefined;
+    } catch (e) {
+      return undefined;
+    }
   }
 };
