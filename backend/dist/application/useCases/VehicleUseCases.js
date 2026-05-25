@@ -9,6 +9,9 @@ class VehicleUseCases {
     async getVehicles() {
         return this.repository.findAll();
     }
+    async getVehiclesPaginated(filters) {
+        return this.repository.findPaginated(filters);
+    }
     async getVehicleById(id) {
         return this.repository.findById(id);
     }

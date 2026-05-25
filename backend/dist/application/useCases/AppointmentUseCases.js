@@ -9,6 +9,9 @@ class AppointmentUseCases {
     async getAppointments() {
         return this.repository.findAll();
     }
+    async getAppointmentsPaginated(filters) {
+        return this.repository.findPaginated(filters);
+    }
     async getAppointmentById(id) {
         return this.repository.findById(id);
     }

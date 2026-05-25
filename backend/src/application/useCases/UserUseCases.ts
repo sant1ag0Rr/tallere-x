@@ -1,11 +1,16 @@
 import { IUserRepository } from '../../domain/repositories/IUserRepository';
 import { User } from '../../domain/models/User';
+import { PaginatedResult, UserFilters } from '../dtos/CommonDtos';
 
 export class UserUseCases {
   constructor(private repository: IUserRepository) {}
 
   async getUsers(): Promise<User[]> {
     return this.repository.findAll();
+  }
+
+  async getUsersPaginated(filters: UserFilters): Promise<PaginatedResult<User>> {
+    return this.repository.findPaginated(filters);
   }
 
   async getUserById(id: string): Promise<User | null> {

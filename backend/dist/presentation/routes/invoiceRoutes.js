@@ -2,11 +2,12 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const InvoiceController_1 = require("../controllers/InvoiceController");
+const authMiddleware_1 = require("../middlewares/authMiddleware");
 const router = (0, express_1.Router)();
 const controller = new InvoiceController_1.InvoiceController();
-router.get('/', controller.getAll);
-router.get('/:id', controller.getById);
-router.post('/', controller.create);
-router.put('/:id', controller.update);
-router.delete('/:id', controller.delete);
+router.get('/', (0, authMiddleware_1.requireRole)(['admin', 'seller']), controller.getAll);
+router.get('/:id', (0, authMiddleware_1.requireRole)(['admin', 'seller']), controller.getById);
+router.post('/', (0, authMiddleware_1.requireRole)(['admin', 'seller']), controller.create);
+router.put('/:id', (0, authMiddleware_1.requireRole)(['admin', 'seller']), controller.update);
+router.delete('/:id', (0, authMiddleware_1.requireRole)(['admin']), controller.delete);
 exports.default = router;

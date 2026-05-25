@@ -2,8 +2,9 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const FeedbackController_1 = require("../controllers/FeedbackController");
+const authMiddleware_1 = require("../middlewares/authMiddleware");
 const router = (0, express_1.Router)();
 const controller = new FeedbackController_1.FeedbackController();
-router.get('/', controller.getAll);
-router.post('/', controller.create);
+router.get('/', (0, authMiddleware_1.requireRole)(['admin', 'client']), controller.getAll);
+router.post('/', (0, authMiddleware_1.requireRole)(['client']), controller.create);
 exports.default = router;

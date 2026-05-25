@@ -9,6 +9,9 @@ class UserUseCases {
     async getUsers() {
         return this.repository.findAll();
     }
+    async getUsersPaginated(filters) {
+        return this.repository.findPaginated(filters);
+    }
     async getUserById(id) {
         return this.repository.findById(id);
     }

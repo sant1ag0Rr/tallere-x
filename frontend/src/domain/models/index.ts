@@ -6,3 +6,4 @@ export * from "@/domain/models/inventory-item";
 export * from "@/domain/models/invoice";
 export * from "@/domain/models/invoice-item";
 export * from "@/domain/models/feedback";
+export * from "@/domain/models/auth";

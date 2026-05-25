@@ -1,6 +1,21 @@
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
-const AUTH_USER_STORAGE_KEY = 'tallerx-auth-user';
+export const AUTH_TOKEN_STORAGE_KEY = 'tallerx-auth-token';
+export const AUTH_USER_STORAGE_KEY = 'tallerx-auth-user';
+
+const clearAuthSession = () => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+  localStorage.removeItem(AUTH_USER_STORAGE_KEY);
+  window.dispatchEvent(new Event('tallerx-auth-logout'));
+
+  if (!window.location.pathname.startsWith('/login')) {
+    window.location.assign(`/login?next=${encodeURIComponent(window.location.pathname)}`);
+  }
+};
 
 const toCamelCase = (value: string) => value.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
 
@@ -23,18 +38,21 @@ const getAuthHeaders = () => {
     return {};
   }
 
-  const token = localStorage.getItem('tallerx-auth-token');
-  const demoUser = localStorage.getItem(AUTH_USER_STORAGE_KEY);
+  const token = localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
 
   return {
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(demoUser ? { 'X-TallerX-User': demoUser } : {})
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
   };
 };
 
 const parseResponse = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+    if (response.status === 401) {
+      clearAuthSession();
+    }
+
+    const errorBody = await response.json().catch(() => undefined) as { error?: string; message?: string } | undefined;
+    throw new Error(errorBody?.message ?? errorBody?.error ?? `HTTP error! status: ${response.status}`);
   }
 
   if (response.status === 204) {

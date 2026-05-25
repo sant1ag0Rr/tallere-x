@@ -1,33 +1,15 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { JwtService } from '../../application/services/JwtService';
+import { AppError } from '../../application/errors/AppError';
+import { JwtUserPayload, UserRole } from '../../domain/models/Auth';
 
 export interface AuthRequest extends Request {
-  user?: any;
+  user?: JwtUserPayload;
 }
 
-const readDemoUser = (req: AuthRequest): any | null => {
-  const rawUser = req.headers['x-tallerx-user'];
-  const headerValue = Array.isArray(rawUser) ? rawUser[0] : rawUser;
-
-  if (!headerValue || process.env.NODE_ENV === 'production') {
-    return null;
-  }
-
-  try {
-    return JSON.parse(headerValue);
-  } catch {
-    return null;
-  }
-};
+const jwtService = new JwtService();
 
 export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction): void => {
-  const demoUser = readDemoUser(req);
-  if (demoUser) {
-    req.user = demoUser;
-    next();
-    return;
-  }
-
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -38,32 +20,40 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
   const token = authHeader.split(' ')[1];
 
   try {
-    const secret = process.env.JWT_SECRET;
-    if (!secret) {
-      console.error('JWT_SECRET is not defined in the environment variables');
-      res.status(500).json({ error: 'Internal server error' });
+    req.user = jwtService.verify(token);
+    next();
+  } catch (error) {
+    if (error instanceof AppError) {
+      res.status(error.statusCode).json({ error: error.message });
       return;
     }
 
-    // Verify token
-    const decoded = jwt.verify(token, secret);
-    
-    // Attach user to request
-    req.user = decoded;
-    
-    next();
-  } catch (error) {
-    res.status(403).json({ error: 'Forbidden: Invalid or expired token' });
+    res.status(403).json({ error: 'Invalid token' });
     return;
   }
 };
 
-export const requireRole = (roles: string[]) => {
+export const requireRole = (roles: UserRole[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction): void => {
     if (!req.user || !roles.includes(req.user.role)) {
       res.status(403).json({ error: 'Forbidden: Insufficient permissions' });
       return;
     }
+    next();
+  };
+};
+
+export const requireSelfOrRole = (roles: UserRole[], paramName = 'id') => {
+  return (req: AuthRequest, res: Response, next: NextFunction): void => {
+    const requestedUserId = req.params[paramName];
+    const isSelf = Boolean(req.user?.sub && requestedUserId && req.user.sub === requestedUserId);
+    const hasRole = Boolean(req.user?.role && roles.includes(req.user.role));
+
+    if (!isSelf && !hasRole) {
+      res.status(403).json({ error: 'Forbidden: You can only access your own resource' });
+      return;
+    }
+
     next();
   };
 };

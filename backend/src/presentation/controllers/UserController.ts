@@ -1,7 +1,9 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { UserUseCases } from '../../application/useCases/UserUseCases';
 import { PrismaUserRepository } from '../../infrastructure/repositories/PrismaUserRepository';
 import { toSnakeCaseObject } from '../utils/caseTransform';
+import { AuthRequest } from '../middlewares/authMiddleware';
+import { UserFilters } from '../../application/dtos/CommonDtos';
 
 export class UserController {
   private useCases: UserUseCases;
@@ -11,57 +13,32 @@ export class UserController {
     this.useCases = new UserUseCases(userRepository);
   }
 
-  getUsers = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const users = await this.useCases.getUsers();
-      res.status(200).json(users);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Internal server error' });
+  getUsers = async (req: AuthRequest, res: Response): Promise<void> => {
+    const users = await this.useCases.getUsersPaginated(req.query as unknown as UserFilters);
+    res.status(200).json({ success: true, ...users });
+  };
+
+  getUserById = async (req: AuthRequest, res: Response): Promise<void> => {
+    const user = await this.useCases.getUserById(String(req.params.id));
+    if (user) {
+      res.status(200).json({ success: true, data: user });
+    } else {
+      res.status(404).json({ success: false, message: 'Not found', details: [] });
     }
   };
 
-  getUserById = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const user = await this.useCases.getUserById(req.params.id as string);
-      if (user) {
-        res.status(200).json(user);
-      } else {
-        res.status(404).json({ error: 'Not found' });
-      }
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
+  createUser = async (req: AuthRequest, res: Response): Promise<void> => {
+    const user = await this.useCases.createUser(req.body);
+    res.status(201).json({ success: true, data: user });
   };
 
-  createUser = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const user = await this.useCases.createUser(req.body);
-      res.status(201).json(user);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
+  updateUser = async (req: AuthRequest, res: Response): Promise<void> => {
+    const user = await this.useCases.updateUser(String(req.params.id), toSnakeCaseObject(req.body) as Partial<never>);
+    res.status(200).json({ success: true, data: user });
   };
 
-  updateUser = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const user = await this.useCases.updateUser(req.params.id as string, toSnakeCaseObject(req.body) as any);
-      res.status(200).json(user);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  };
-
-  deleteUser = async (req: Request, res: Response): Promise<void> => {
-    try {
-      await this.useCases.deleteUser(req.params.id as string);
-      res.status(204).send();
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
+  deleteUser = async (req: AuthRequest, res: Response): Promise<void> => {
+    await this.useCases.deleteUser(String(req.params.id));
+    res.status(204).send();
   };
 }

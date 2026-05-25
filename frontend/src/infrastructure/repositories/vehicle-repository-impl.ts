@@ -2,25 +2,31 @@ import type { Vehicle } from "@/domain/models";
 import type { VehicleStatus } from "@/domain/constants";
 import { httpClient } from "../http/httpClient";
 
+interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 export const vehicleRepository = {
   async listVehicles(status?: VehicleStatus): Promise<Vehicle[]> {
-    const vehicles = await httpClient.get<Vehicle[]>('/vehicles');
-    if (!status) {
-      return vehicles;
-    }
-    return vehicles.filter((vehicle) => vehicle.status === status);
+    const query = status ? `?status=${encodeURIComponent(status)}` : '';
+    const response = await httpClient.get<PaginatedResponse<Vehicle>>(`/vehicles${query}`);
+    return response.data;
   },
 
   async getLatestVehicles(limit = 5): Promise<Vehicle[]> {
-    const vehicles = await httpClient.get<Vehicle[]>('/vehicles');
-    return vehicles
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, limit);
+    const response = await httpClient.get<PaginatedResponse<Vehicle>>(`/vehicles?limit=${limit}`);
+    return response.data;
   },
 
   async getVehiclesByClientId(clientId: string): Promise<Vehicle[]> {
-    const vehicles = await httpClient.get<Vehicle[]>('/vehicles');
-    return vehicles.filter((vehicle) => vehicle.assignedClientId === clientId);
+    const response = await httpClient.get<PaginatedResponse<Vehicle>>(`/vehicles?clientId=${clientId}&limit=100`);
+    return response.data;
   },
 
   async createVehicle(data: Partial<Vehicle>): Promise<Vehicle> {
