@@ -51,8 +51,9 @@ const parseResponse = async <T>(response: Response): Promise<T> => {
       clearAuthSession();
     }
 
-    const errorBody = await response.json().catch(() => undefined) as { error?: string; message?: string } | undefined;
-    throw new Error(errorBody?.message ?? errorBody?.error ?? `HTTP error! status: ${response.status}`);
+    const errorBody = await response.json().catch(() => undefined) as { error?: string; message?: string, details?: any[] } | undefined;
+    const detailsStr = errorBody?.details ? ` - Details: ${JSON.stringify(errorBody.details)}` : '';
+    throw new Error(`${errorBody?.message ?? errorBody?.error ?? `HTTP error! status: ${response.status}`}${detailsStr}`);
   }
 
   if (response.status === 204) {

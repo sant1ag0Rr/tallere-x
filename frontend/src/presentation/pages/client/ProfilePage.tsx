@@ -6,10 +6,10 @@ import { getClientProfileUseCase } from '@/application/useCases/getClientProfile
 import { updateClientProfileUseCase } from '@/application/useCases/updateClientProfile';
 import { Loader } from '@/presentation/components/shared/Loader';
 import { User, Mail, Phone, MapPin, Save } from 'lucide-react';
-
-const MOCK_CLIENT_ID = 'client-1';
+import { useAuth } from '@/application/hooks/use-auth';
 
 export const ProfilePage: React.FC = () => {
+  const { user } = useAuth();
   const [profile, setProfile] = useState<Client | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
@@ -17,8 +17,12 @@ export const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     const fetchProfile = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
       try {
-        const data = await getClientProfileUseCase(MOCK_CLIENT_ID);
+        const data = await getClientProfileUseCase(user.id);
         if (data) {
           setProfile(data as Client);
           setFormData(data as Client);
@@ -30,7 +34,7 @@ export const ProfilePage: React.FC = () => {
       }
     };
     fetchProfile();
-  }, []);
+  }, [user?.id]);
 
   const handleSave = async () => {
     try {

@@ -11,14 +11,23 @@ export class PrismaInventoryRepository implements IInventoryRepository {
     return prisma.inventory_items.findUnique({ where: { id } });
   }
 
+  private sanitizeData(data: any): any {
+    const { 
+      id, created_at, updated_at, createdAt, updatedAt,
+      work_order_parts,
+      ...validData
+    } = data;
+    return validData;
+  }
+
   async create(data: Omit<inventory_items, 'id' | 'createdAt' | 'updatedAt'>): Promise<inventory_items> {
-    return prisma.inventory_items.create({ data: data as any });
+    return prisma.inventory_items.create({ data: this.sanitizeData(data) });
   }
 
   async update(id: string, data: Partial<inventory_items>): Promise<inventory_items> {
     return prisma.inventory_items.update({
       where: { id },
-      data: data as any
+      data: this.sanitizeData(data)
     });
   }
 

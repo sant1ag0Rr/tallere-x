@@ -39,13 +39,21 @@ class PrismaVehicleRepository {
     async findById(id) {
         return prisma_1.default.vehicles.findUnique({ where: { id } });
     }
+    sanitizeData(data) {
+        const { id, created_at, updated_at, createdAt, updatedAt, profile, profiles, appointments, invoices, work_orders, assigned_client_id, ...validData } = data;
+        const sanitized = { ...validData };
+        if (assigned_client_id) {
+            sanitized.profiles = { connect: { id: assigned_client_id } };
+        }
+        return sanitized;
+    }
     async create(data) {
-        return prisma_1.default.vehicles.create({ data });
+        return prisma_1.default.vehicles.create({ data: this.sanitizeData(data) });
     }
     async update(id, data) {
         return prisma_1.default.vehicles.update({
             where: { id },
-            data
+            data: this.sanitizeData(data)
         });
     }
     async delete(id) {

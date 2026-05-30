@@ -27,7 +27,11 @@ export function AdminVehicleForm({ clients, onSubmit, onCancel }: AdminVehicleFo
     e.preventDefault();
     setLoading(true);
     try {
-      await onSubmit(formData);
+      const payload = {
+        ...formData,
+        assignedClientId: formData.assignedClientId === "" ? null : formData.assignedClientId
+      };
+      await onSubmit(payload);
     } finally {
       setLoading(false);
     }

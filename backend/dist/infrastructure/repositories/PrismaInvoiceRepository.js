@@ -14,13 +14,24 @@ class PrismaInvoiceRepository {
     async findById(id) {
         return prisma_1.default.invoices.findUnique({ where: { id } });
     }
+    sanitizeData(data) {
+        const { id, created_at, updated_at, createdAt, updatedAt, invoice_items, profiles, profile, vehicles, vehicle, client_name, client_id, vehicle_id, ...validData } = data;
+        const sanitized = { ...validData };
+        if (client_id) {
+            sanitized.profiles = { connect: { id: client_id } };
+        }
+        if (vehicle_id) {
+            sanitized.vehicles = { connect: { id: vehicle_id } };
+        }
+        return sanitized;
+    }
     async create(data) {
-        return prisma_1.default.invoices.create({ data: data });
+        return prisma_1.default.invoices.create({ data: this.sanitizeData(data) });
     }
     async update(id, data) {
         return prisma_1.default.invoices.update({
             where: { id },
-            data: data
+            data: this.sanitizeData(data)
         });
     }
     async delete(id) {

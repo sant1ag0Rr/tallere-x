@@ -9,18 +9,22 @@ import { FeedbackForm } from '@/presentation/components/client/FeedbackForm';
 import { EmptyState } from '@/presentation/components/shared/EmptyState';
 import { Loader } from '@/presentation/components/shared/Loader';
 import { Archive } from 'lucide-react';
-
-const MOCK_CLIENT_ID = 'client-1';
+import { useAuth } from '@/application/hooks/use-auth';
 
 export const HistoryPage: React.FC = () => {
+  const { user } = useAuth();
   const [history, setHistory] = useState<WorkOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [feedbackSuccess, setFeedbackSuccess] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const fetchHistory = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
       try {
-        const data = await getClientHistoryUseCase(MOCK_CLIENT_ID);
+        const data = await getClientHistoryUseCase(user.id);
         setHistory(data);
       } catch (err) {
         console.error(err);
@@ -29,10 +33,11 @@ export const HistoryPage: React.FC = () => {
       }
     };
     fetchHistory();
-  }, []);
+  }, [user?.id]);
 
   const handleFeedback = async (orderId: string, rating: number, comment: string) => {
-    await submitFeedbackUseCase({ clientId: MOCK_CLIENT_ID, workOrderId: orderId, rating, comment });
+    if (!user?.id) return;
+    await submitFeedbackUseCase({ clientId: user.id, workOrderId: orderId, rating, comment });
     setFeedbackSuccess(prev => ({ ...prev, [orderId]: true }));
   };
 

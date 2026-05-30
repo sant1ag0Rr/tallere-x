@@ -9,10 +9,10 @@ import { AppointmentForm } from '@/presentation/components/client/AppointmentFor
 import { EmptyState } from '@/presentation/components/shared/EmptyState';
 import { Loader } from '@/presentation/components/shared/Loader';
 import { Calendar, Plus, Clock, Car } from 'lucide-react';
-
-const MOCK_CLIENT_ID = 'client-1';
+import { useAuth } from '@/application/hooks/use-auth';
 
 export const AppointmentsPage: React.FC = () => {
+  const { user } = useAuth();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
@@ -20,10 +20,14 @@ export const AppointmentsPage: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
       try {
         const [appts, vehs] = await Promise.all([
-          getClientAppointmentsUseCase(MOCK_CLIENT_ID),
-          getClientVehiclesUseCase(MOCK_CLIENT_ID)
+          getClientAppointmentsUseCase(user.id),
+          getClientVehiclesUseCase(user.id)
         ]);
         setAppointments(appts);
         setVehicles(vehs);
@@ -34,11 +38,12 @@ export const AppointmentsPage: React.FC = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [user?.id]);
 
   const handleCreate = async (data: any) => {
+    if (!user?.id) return;
     try {
-      const newAppt = await createAppointmentUseCase({ ...data, clientId: MOCK_CLIENT_ID });
+      const newAppt = await createAppointmentUseCase({ ...data, clientId: user.id });
       setAppointments([...appointments, newAppt]);
       setShowForm(false);
       alert('Cita agendada con éxito');

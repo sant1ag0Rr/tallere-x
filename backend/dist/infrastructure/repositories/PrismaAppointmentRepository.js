@@ -43,13 +43,24 @@ class PrismaAppointmentRepository {
     async findByClientId(clientId) {
         return prisma_1.default.appointments.findMany({ where: { client_id: clientId } });
     }
+    sanitizeData(data) {
+        const { id, created_at, updated_at, createdAt, updatedAt, profile, profiles, vehicle, vehicles, client_name, vehicle_plate, client_id, vehicle_id, ...validData } = data;
+        const sanitized = { ...validData };
+        if (client_id) {
+            sanitized.profiles = { connect: { id: client_id } };
+        }
+        if (vehicle_id) {
+            sanitized.vehicles = { connect: { id: vehicle_id } };
+        }
+        return sanitized;
+    }
     async create(data) {
-        return prisma_1.default.appointments.create({ data });
+        return prisma_1.default.appointments.create({ data: this.sanitizeData(data) });
     }
     async update(id, data) {
         return prisma_1.default.appointments.update({
             where: { id },
-            data
+            data: this.sanitizeData(data)
         });
     }
     async delete(id) {

@@ -9,18 +9,22 @@ import { VehicleForm } from '@/presentation/components/client/VehicleForm';
 import { EmptyState } from '@/presentation/components/shared/EmptyState';
 import { Loader } from '@/presentation/components/shared/Loader';
 import { Car, Plus } from 'lucide-react';
-
-const MOCK_CLIENT_ID = 'client-1';
+import { useAuth } from '@/application/hooks/use-auth';
 
 export const VehiclesPage: React.FC = () => {
+  const { user } = useAuth();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     const fetchVehicles = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
       try {
-        const data = await getClientVehiclesUseCase(MOCK_CLIENT_ID);
+        const data = await getClientVehiclesUseCase(user.id);
         setVehicles(data);
       } catch (err) {
         console.error(err);
@@ -29,13 +33,14 @@ export const VehiclesPage: React.FC = () => {
       }
     };
     fetchVehicles();
-  }, []);
+  }, [user?.id]);
 
   const handleCreateVehicle = async (data: Partial<Vehicle>) => {
+    if (!user?.id) return;
     try {
       const newVehicle = await addClientVehicleUseCase({
         ...data,
-        clientId: MOCK_CLIENT_ID,
+        clientId: user.id,
       });
       setVehicles([...vehicles, newVehicle]);
       setShowForm(false);

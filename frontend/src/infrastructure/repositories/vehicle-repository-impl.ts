@@ -30,6 +30,7 @@ export const vehicleRepository = {
   },
 
   async createVehicle(data: Partial<Vehicle>): Promise<Vehicle> {
-    return httpClient.post<Vehicle>('/vehicles', data);
+    const response = await httpClient.post<{ success: boolean; data: Vehicle }>('/vehicles', data);
+    return response.data;
   }
 };

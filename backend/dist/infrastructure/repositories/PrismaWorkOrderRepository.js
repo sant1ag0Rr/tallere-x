@@ -40,13 +40,21 @@ class PrismaWorkOrderRepository {
             }
         });
     }
+    sanitizeData(data) {
+        const { id, created_at, updated_at, createdAt, updatedAt, vehicle, vehicles, profile, profiles, client_name, used_parts, images, feedback, work_order_parts, vehicle_id, ...validData } = data;
+        const sanitized = { ...validData };
+        if (vehicle_id) {
+            sanitized.vehicles = { connect: { id: vehicle_id } };
+        }
+        return sanitized;
+    }
     async create(data) {
-        return prisma_1.default.work_orders.create({ data: data });
+        return prisma_1.default.work_orders.create({ data: this.sanitizeData(data) });
     }
     async update(id, data) {
         return prisma_1.default.work_orders.update({
             where: { id },
-            data: data
+            data: this.sanitizeData(data)
         });
     }
     async delete(id) {

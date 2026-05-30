@@ -12,13 +12,17 @@ class PrismaInventoryRepository {
     async findById(id) {
         return prisma_1.default.inventory_items.findUnique({ where: { id } });
     }
+    sanitizeData(data) {
+        const { id, created_at, updated_at, createdAt, updatedAt, work_order_parts, ...validData } = data;
+        return validData;
+    }
     async create(data) {
-        return prisma_1.default.inventory_items.create({ data: data });
+        return prisma_1.default.inventory_items.create({ data: this.sanitizeData(data) });
     }
     async update(id, data) {
         return prisma_1.default.inventory_items.update({
             where: { id },
-            data: data
+            data: this.sanitizeData(data)
         });
     }
     async delete(id) {

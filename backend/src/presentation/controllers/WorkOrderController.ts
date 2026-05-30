@@ -63,9 +63,9 @@ export class WorkOrderController {
     try {
       const data = await this.useCases.updateWorkOrder(req.params.id as string, toSnakeCaseObject(req.body) as any);
       res.status(200).json(data);
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'Internal server error' });
+    } catch (error: any) {
+      console.error('UPDATE ERROR:', error);
+      res.status(500).json({ error: error?.message || 'Internal server error', details: error });
     }
   };
 

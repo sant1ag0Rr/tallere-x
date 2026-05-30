@@ -46,14 +46,34 @@ export class PrismaAppointmentRepository implements IAppointmentRepository {
     return prisma.appointments.findMany({ where: { client_id: clientId } });
   }
 
+  private sanitizeData(data: any): any {
+    const { 
+      id, created_at, updated_at, createdAt, updatedAt,
+      profile, profiles, vehicle, vehicles, client_name, vehicle_plate,
+      client_id, vehicle_id,
+      ...validData
+    } = data;
+
+    const sanitized: any = { ...validData };
+
+    if (client_id) {
+      sanitized.profiles = { connect: { id: client_id } };
+    }
+    if (vehicle_id) {
+      sanitized.vehicles = { connect: { id: vehicle_id } };
+    }
+
+    return sanitized;
+  }
+
   async create(data: Omit<appointments, 'id' | 'created_at' | 'updated_at'>): Promise<appointments> {
-    return prisma.appointments.create({ data });
+    return prisma.appointments.create({ data: this.sanitizeData(data) });
   }
 
   async update(id: string, data: Partial<appointments>): Promise<appointments> {
     return prisma.appointments.update({
       where: { id },
-      data
+      data: this.sanitizeData(data)
     });
   }
 

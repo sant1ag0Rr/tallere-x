@@ -39,14 +39,32 @@ export class PrismaWorkOrderRepository implements IWorkOrderRepository {
     }) as any;
   }
 
+  private sanitizeData(data: any): any {
+    const { 
+      id, created_at, updated_at, createdAt, updatedAt, 
+      vehicle, vehicles, profile, profiles, client_name, 
+      used_parts, images, feedback, work_order_parts,
+      vehicle_id,
+      ...validData 
+    } = data;
+
+    const sanitized: any = { ...validData };
+
+    if (vehicle_id) {
+      sanitized.vehicles = { connect: { id: vehicle_id } };
+    }
+
+    return sanitized;
+  }
+
   async create(data: Omit<work_orders, 'id' | 'createdAt' | 'updatedAt'>): Promise<work_orders> {
-    return prisma.work_orders.create({ data: data as any });
+    return prisma.work_orders.create({ data: this.sanitizeData(data) });
   }
 
   async update(id: string, data: Partial<work_orders>): Promise<work_orders> {
     return prisma.work_orders.update({
       where: { id },
-      data: data as any
+      data: this.sanitizeData(data)
     });
   }
 

@@ -9,16 +9,21 @@ import { EmptyState } from '@/presentation/components/shared/EmptyState';
 import { Loader } from '@/presentation/components/shared/Loader';
 import { Activity, Car, FileText, Wrench, Image as ImageIcon } from 'lucide-react';
 
-const MOCK_CLIENT_ID = 'client-1';
+import { useAuth } from '@/application/hooks/use-auth';
 
 export const OrdersPage: React.FC = () => {
+  const { user } = useAuth();
   const [orders, setOrders] = useState<WorkOrder[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchOrders = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
       try {
-        const data = await getClientOrdersUseCase(MOCK_CLIENT_ID);
+        const data = await getClientOrdersUseCase(user.id);
         setOrders(data);
       } catch (err) {
         console.error(err);
@@ -27,7 +32,7 @@ export const OrdersPage: React.FC = () => {
       }
     };
     fetchOrders();
-  }, []);
+  }, [user?.id]);
 
   if (loading) return <div className="mt-20"><Loader text="Cargando estado de tus vehículos..." /></div>;
 

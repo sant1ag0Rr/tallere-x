@@ -41,14 +41,31 @@ export class PrismaVehicleRepository implements IVehicleRepository {
     return prisma.vehicles.findUnique({ where: { id } });
   }
 
+  private sanitizeData(data: any): any {
+    const { 
+      id, created_at, updated_at, createdAt, updatedAt,
+      profile, profiles, appointments, invoices, work_orders,
+      assigned_client_id,
+      ...validData
+    } = data;
+
+    const sanitized: any = { ...validData };
+
+    if (assigned_client_id) {
+      sanitized.profiles = { connect: { id: assigned_client_id } };
+    }
+
+    return sanitized;
+  }
+
   async create(data: Omit<vehicles, 'id' | 'created_at' | 'updated_at'>): Promise<vehicles> {
-    return prisma.vehicles.create({ data });
+    return prisma.vehicles.create({ data: this.sanitizeData(data) });
   }
 
   async update(id: string, data: Partial<vehicles>): Promise<vehicles> {
     return prisma.vehicles.update({
       where: { id },
-      data
+      data: this.sanitizeData(data)
     });
   }
 
